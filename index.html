@@ -122,6 +122,7 @@ input:focus { border-color: #0071e3; }
     <button class="btn-add" onclick="addBlock('imgtext')">🖼 Текст + картинка</button>
     <button class="btn-add" onclick="addBlock('imgbtn')">🔵 Картинка + кнопка</button>
     <button class="btn-add" onclick="addBlock('list')">🔻 Список</button>
+    <button class="btn-add" onclick="addBlock('lightblock')">🔘 Серый блок</button>
     <button class="btn-add" onclick="addBlock('bordered')">⬜ Рамка — текст</button>
     <button class="btn-add" onclick="addBlock('bordered-cta')">🔲 Рамка — кнопка</button>
     <button class="btn-add" onclick="addBlock('cta')">🚀 Нижний CTA</button>
@@ -209,6 +210,13 @@ const BLOCK_DEFS = {
     fields: [
       { key: 'title', label: 'Заголовок списка (оставь пустым если нет)', type: 'text', placeholder: 'Что умеет?' },
       { key: 'items', label: 'Пункты списка (каждый с новой строки)', type: 'textarea', rows: 5, placeholder: 'Собирает сайты, боты, веб-приложения с нуля;\nАвтоматизирует работу с файлами;\nСоздаёт мультиагентные системы;' },
+    ]
+  },
+  lightblock: {
+    icon: '🔘', title: 'Серый блок',
+    fields: [
+      { key: 'title',   label: 'Жирный заголовок (оставь пустым если нет)', type: 'text',     placeholder: 'ТЕКСТ_1' },
+      { key: 'content', label: 'Обычный текст',                             type: 'textarea', rows: 4, placeholder: 'ТЕКСТ_2' },
     ]
   },
   bordered: {
@@ -512,6 +520,18 @@ function buildBlock(b) {
         'background-color:#dbeeff;border-radius:10px;',
         'padding:20px 22px;border-radius:10px;',
         titleHtml + itemsHtml
+      );
+    }
+
+    case 'lightblock': {
+      const title   = (d.title||'').trim();
+      const content = toHtml(d.content||'');
+      const titleHtml   = title   ? `<p style="margin:0 0 16px 0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;"><strong>${title}</strong></p>` : '';
+      const contentHtml = content ? `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;">${content}</p>` : '';
+      return tbl(
+        'background-color:#f4f6fa;border-radius:10px;box-sizing:border-box;',
+        'padding:30px;border-radius:10px;',
+        titleHtml + contentHtml
       );
     }
 

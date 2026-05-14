@@ -230,7 +230,7 @@ const BLOCK_DEFS = {
     icon: '🔲', title: 'Рамка — кнопка',
     fields: [
       { key: 'title', label: 'Текст 1 (жирный, оставь пустым если нет)', type: 'text', placeholder: 'Готов? Действуй! 🎉' },
-      { key: 'content', label: 'Текст 2 (обычный, оставь пустым если нет)', type: 'text', placeholder: 'Присоединяйся сегодня' },
+      { key: 'content', label: 'Текст 2 (обычный, оставь пустым если нет)', type: 'textarea', rows: 3, placeholder: 'Присоединяйся сегодня' },
       { key: 'btn', label: 'Текст кнопки',   type: 'text', placeholder: 'ССЫЛКА' },
       { key: 'url', label: 'Ссылка кнопки', type: 'text', placeholder: 'https://...' },
     ]
@@ -421,7 +421,7 @@ function generate() {
 }
 
 const F = "'Manrope', sans-serif";
-const BTN = `display:inline-block;background:#FFD700;color:#000000;font-weight:700;padding:13px 40px;border-radius:50px;text-decoration:none;font-size:20px;font-family:'Manrope',sans-serif;`;
+const BTN = `display:inline-block;background-color:#E5F228;color:#000000;font-weight:700;padding:15px 40px;border-radius:25px;text-decoration:none;font-size:20px;font-family:'Manrope',sans-serif;text-align:center;box-sizing:border-box;`;
 
 function tbl(tableStyle, tdStyle, content, wrapperStyle) {
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="${wrapperStyle||'margin-bottom:20px;'}">

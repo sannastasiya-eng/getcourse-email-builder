@@ -403,7 +403,7 @@ const F = "'Manrope', sans-serif";
 const BTN = `display:inline-block;background:#FFD700;color:#000000;font-weight:700;padding:13px 40px;border-radius:50px;text-decoration:none;font-size:20px;font-family:'Manrope',sans-serif;`;
 
 function tbl(tableStyle, tdStyle, content, wrapperStyle) {
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="${wrapperStyle||'margin-bottom:15px;'}">
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="${wrapperStyle||'margin-bottom:20px;'}">
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;${tableStyle}border-collapse:separate!important;">
       <tr><td style="${tdStyle}">${content}</td></tr>
@@ -477,7 +477,7 @@ function buildBlock(b) {
       const contentHtml = content  ? `<p style="text-align:center;margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.5;">${content}</p>` : '';
       const linkHtml    = linktext ? `<p style="line-height:5px;">&nbsp;</p><p style="text-align:center;margin:0;"><strong><a href="${d.url||'#'}" style="color:#0057FF;text-decoration:underline;font-family:${F};font-size:20px;">${linktext}</a></strong></p><p style="line-height:5px;">&nbsp;</p>` : '';
       const imgHtml     = imgurl   ? `<img src="${imgurl}" alt="Изображение" style="max-width:100%;height:auto;display:block;margin:0 auto;">` : `<div style="background:#ddd;height:100px;border-radius:8px;"></div>`;
-      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:15px;">
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
   <tr><td align="center">
     <table role="presentation" class="container10" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#ffffff;padding:10px;border-radius:10px;border-collapse:separate!important;">
       <tbody>
@@ -526,7 +526,7 @@ function buildBlock(b) {
         'border:2px solid #0057FF;border-radius:10px;background-color:#f4f6fa;',
         `padding:15px 20px;font-family:${F};font-size:20px;line-height:1.5;font-weight:400;color:#000000;border-radius:10px;`,
         content,
-        'margin-top:15px;margin-bottom:10px;'
+        'margin-bottom:20px;'
       );
     }
 
@@ -540,7 +540,7 @@ function buildBlock(b) {
         'border:2px solid #0057FF;border-radius:10px;background-color:#f4f6fa;',
         'padding:24px 20px;text-align:center;border-radius:10px;',
         `${titleHtml}${contentHtml}<a href="${d.url||'#'}" style="${BTN}">${btn}</a>`,
-        'margin-top:15px;margin-bottom:10px;'
+        'margin-bottom:20px;'
       );
     }
 
@@ -555,7 +555,7 @@ function buildBlock(b) {
         'background-color:#0057FF;border-radius:10px;box-sizing:border-box;',
         'padding:30px;text-align:center;border-radius:10px;',
         `${titleHtml}${contentHtml}<a href="${d.url||'#'}" style="${btnCta}">${btn}</a>`,
-        'margin-top:4px;margin-bottom:15px;'
+        'margin-bottom:20px;'
       );
     }
 
@@ -567,7 +567,7 @@ function buildBlock(b) {
         ? `<img src="${imgurl}" alt="Изображение" style="max-width:70%;border-radius:100px;vertical-align:middle;display:block;margin:0 auto;">`
         : `<div style="width:90px;height:90px;background:rgba(255,255,255,0.2);border-radius:50%;margin:0 auto;"></div>`;
       const btnStyle = `display:inline-block;background-color:#E5F228;color:#000000;text-decoration:none;padding:15px 40px;border-radius:25px;font-size:16px;font-weight:bold;text-align:center;box-sizing:border-box;width:100%;max-width:400px;font-family:'Manrope',sans-serif;`;
-      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:20px 0;">
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
   <tr><td align="center">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#0057FF;padding:20px;border-radius:10px;color:#E5F228;box-sizing:border-box;border-collapse:separate!important;">
       <tbody><tr>

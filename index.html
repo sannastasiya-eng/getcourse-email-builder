@@ -63,6 +63,16 @@ input:focus { border-color: #0071e3; }
 .richtext:focus { border-color: #0071e3; }
 .richtext:empty::before { content: attr(data-placeholder); color: #aaa; pointer-events: none; display: block; }
 
+/* Align toggle */
+.align-toggle { display: flex; gap: 4px; margin-top: 2px; }
+.align-btn {
+  flex: 1; padding: 5px 8px; border: 1.5px solid #ddd; border-radius: 6px;
+  background: #fff; cursor: pointer; font-size: 12px; font-weight: 500;
+  color: #555; transition: all 0.1s; text-align: center;
+}
+.align-btn:hover { border-color: #0071e3; color: #0071e3; }
+.align-btn.active { background: #0071e3; border-color: #0071e3; color: #fff; }
+
 /* Add block buttons */
 .add-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
 .btn-add {
@@ -169,22 +179,25 @@ const BLOCK_DEFS = {
   banner: {
     icon: '🏷', title: 'Верхний баннер',
     fields: [
-      { key: 'text', label: 'Текст баннера', type: 'textarea', rows: 3, placeholder: 'Собрали востребованные инструменты...' },
-      { key: 'btn',   label: 'Текст кнопки',                        type: 'text', placeholder: 'ВЫБРАТЬ ФОРМАТ' },
-      { key: 'url',   label: 'Ссылка кнопки',                       type: 'text', placeholder: 'https://...' },
-      { key: 'promo', label: 'Промокод (оставь пустым если нет)',    type: 'text', placeholder: 'MONEY' },
+      { key: 'text',  label: 'Текст баннера',                          type: 'textarea', rows: 3, placeholder: 'Собрали востребованные инструменты...' },
+      { key: 'btn',   label: 'Текст кнопки',                           type: 'text',     placeholder: 'ВЫБРАТЬ ФОРМАТ' },
+      { key: 'url',   label: 'Ссылка кнопки',                          type: 'text',     placeholder: 'https://...' },
+      { key: 'promo', label: 'Промокод (оставь пустым если нет)',       type: 'text',     placeholder: 'MONEY' },
+      { key: 'align', label: 'Выравнивание текста',                     type: 'align',    default: 'center' },
     ]
   },
   text: {
     icon: '📝', title: 'Текстовый блок',
     fields: [
       { key: 'content', label: 'Текст (каждый абзац — с новой строки)', type: 'textarea', rows: 5, placeholder: 'Первый абзац...\n\nВторой абзац...' },
+      { key: 'align',   label: 'Выравнивание текста',                   type: 'align',    default: 'left' },
     ]
   },
   highlight: {
     icon: '💙', title: 'Синий блок',
     fields: [
       { key: 'content', label: 'Текст (выдели нужное → нажми Ж для жирного)', type: 'textarea', rows: 4, placeholder: 'За 4 недели можно глубоко «нырнуть» в самый востребованный Клауд Код...' },
+      { key: 'align',   label: 'Выравнивание текста',                          type: 'align',    default: 'left' },
     ]
   },
   imgbtn: {
@@ -192,8 +205,9 @@ const BLOCK_DEFS = {
     fields: [
       { key: 'imgurl',  label: 'URL картинки (из Геткурса)',   type: 'text',     placeholder: 'https://fs.getcourse.ru/...' },
       { key: 'content', label: 'Текст (выдели нужное → Ж)',    type: 'textarea', rows: 4, placeholder: 'ТЕКСТ_1\nТЕКСТ_2\nЖирный текст' },
-      { key: 'btn',     label: 'Текст кнопки',   type: 'text', placeholder: 'ССЫЛКА' },
-      { key: 'url',     label: 'Ссылка кнопки', type: 'text', placeholder: 'https://...' },
+      { key: 'btn',     label: 'Текст кнопки',                 type: 'text',     placeholder: 'ССЫЛКА' },
+      { key: 'url',     label: 'Ссылка кнопки',                type: 'text',     placeholder: 'https://...' },
+      { key: 'align',   label: 'Выравнивание текста',          type: 'align',    default: 'center' },
     ]
   },
   imgtext: {
@@ -201,16 +215,18 @@ const BLOCK_DEFS = {
     fields: [
       { key: 'title',    label: 'Заголовок',                              type: 'text',     placeholder: '⏰ Специальное предложение до 23:59!' },
       { key: 'content',  label: 'Текст блока',                            type: 'textarea', rows: 4, placeholder: 'Скидка 10 000 руб на курс...' },
-      { key: 'linktext', label: 'Текст ссылки (оставь пустым если нет)', type: 'text', placeholder: 'ЗАБРАТЬ СКИДКУ' },
-      { key: 'url',      label: 'Ссылка (куда ведёт)',                   type: 'text', placeholder: 'https://...' },
-      { key: 'imgurl',   label: 'URL картинки (из Геткурса)',            type: 'text', placeholder: 'https://fs.getcourse.ru/...' },
+      { key: 'linktext', label: 'Текст ссылки (оставь пустым если нет)', type: 'text',     placeholder: 'ЗАБРАТЬ СКИДКУ' },
+      { key: 'url',      label: 'Ссылка (куда ведёт)',                   type: 'text',     placeholder: 'https://...' },
+      { key: 'imgurl',   label: 'URL картинки (из Геткурса)',            type: 'text',     placeholder: 'https://fs.getcourse.ru/...' },
+      { key: 'align',    label: 'Выравнивание текста',                   type: 'align',    default: 'center' },
     ]
   },
   list: {
     icon: '🔻', title: 'Список с треугольниками',
     fields: [
-      { key: 'title', label: 'Заголовок списка (оставь пустым если нет)', type: 'text', placeholder: 'Что умеет?' },
-      { key: 'items', label: 'Пункты списка (каждый с новой строки)', type: 'textarea', rows: 5, placeholder: 'Собирает сайты, боты, веб-приложения с нуля;\nАвтоматизирует работу с файлами;\nСоздаёт мультиагентные системы;' },
+      { key: 'title', label: 'Заголовок списка (оставь пустым если нет)', type: 'text',     placeholder: 'Что умеет?' },
+      { key: 'items', label: 'Пункты списка (каждый с новой строки)',      type: 'textarea', rows: 5, placeholder: 'Собирает сайты, боты, веб-приложения с нуля;\nАвтоматизирует работу с файлами;\nСоздаёт мультиагентные системы;' },
+      { key: 'align', label: 'Выравнивание текста',                        type: 'align',    default: 'left' },
     ]
   },
   lightblock: {
@@ -218,38 +234,43 @@ const BLOCK_DEFS = {
     fields: [
       { key: 'title',   label: 'Жирный заголовок (оставь пустым если нет)', type: 'text',     placeholder: 'ТЕКСТ_1' },
       { key: 'content', label: 'Обычный текст',                             type: 'textarea', rows: 4, placeholder: 'ТЕКСТ_2' },
+      { key: 'align',   label: 'Выравнивание текста',                       type: 'align',    default: 'left' },
     ]
   },
   bordered: {
     icon: '⬜', title: 'Рамка — текст',
     fields: [
       { key: 'content', label: 'Текст (жирный через **текст**)', type: 'textarea', rows: 4, placeholder: '**Клауд Код пошел дальше** — он и вовсе работает с проектами целиком, а не с отдельными файлами.' },
+      { key: 'align',   label: 'Выравнивание текста',            type: 'align',    default: 'left' },
     ]
   },
   'bordered-cta': {
     icon: '🔲', title: 'Рамка — кнопка',
     fields: [
-      { key: 'title', label: 'Текст 1 (жирный, оставь пустым если нет)', type: 'text', placeholder: 'Готов? Действуй! 🎉' },
+      { key: 'title',   label: 'Текст 1 (жирный, оставь пустым если нет)',   type: 'text',     placeholder: 'Готов? Действуй! 🎉' },
       { key: 'content', label: 'Текст 2 (обычный, оставь пустым если нет)', type: 'textarea', rows: 3, placeholder: 'Присоединяйся сегодня' },
-      { key: 'btn', label: 'Текст кнопки',   type: 'text', placeholder: 'ССЫЛКА' },
-      { key: 'url', label: 'Ссылка кнопки', type: 'text', placeholder: 'https://...' },
+      { key: 'btn',     label: 'Текст кнопки',                               type: 'text',     placeholder: 'ССЫЛКА' },
+      { key: 'url',     label: 'Ссылка кнопки',                              type: 'text',     placeholder: 'https://...' },
+      { key: 'align',   label: 'Выравнивание текста',                        type: 'align',    default: 'center' },
     ]
   },
   cta: {
     icon: '🚀', title: 'Нижний CTA-блок',
     fields: [
-      { key: 'title', label: 'Заголовок (оставь пустым если нет)', type: 'text', placeholder: 'Готов? Действуй! 🎉' },
-      { key: 'content', label: 'Текст предложения', type: 'textarea', rows: 3, placeholder: 'При покупке обучения сегодня вернём 100% оплаты бонусами...' },
-      { key: 'btn', label: 'Текст кнопки',   type: 'text', placeholder: 'К ТАРИФАМ' },
-      { key: 'url', label: 'Ссылка кнопки', type: 'text', placeholder: 'https://...' },
+      { key: 'title',   label: 'Заголовок (оставь пустым если нет)', type: 'text',     placeholder: 'Готов? Действуй! 🎉' },
+      { key: 'content', label: 'Текст предложения',                  type: 'textarea', rows: 3, placeholder: 'При покупке обучения сегодня вернём 100% оплаты бонусами...' },
+      { key: 'btn',     label: 'Текст кнопки',                       type: 'text',     placeholder: 'К ТАРИФАМ' },
+      { key: 'url',     label: 'Ссылка кнопки',                      type: 'text',     placeholder: 'https://...' },
+      { key: 'align',   label: 'Выравнивание текста',                type: 'align',    default: 'center' },
     ]
   },
   twocols: {
     icon: '⚏', title: 'Два столбца',
     fields: [
-      { key: 'title', label: 'Заголовок (оставь пустым если нет)', type: 'text', placeholder: 'Заголовок блока' },
-      { key: 'col1',  label: 'Левый столбец',  type: 'textarea', rows: 3, placeholder: '🔸 Первый пункт' },
-      { key: 'col2',  label: 'Правый столбец', type: 'textarea', rows: 3, placeholder: '🔸 Второй пункт' },
+      { key: 'title', label: 'Заголовок (оставь пустым если нет)', type: 'text',     placeholder: 'Заголовок блока' },
+      { key: 'col1',  label: 'Левый столбец',                      type: 'textarea', rows: 3, placeholder: '🔸 Первый пункт' },
+      { key: 'col2',  label: 'Правый столбец',                     type: 'textarea', rows: 3, placeholder: '🔸 Второй пункт' },
+      { key: 'align', label: 'Выравнивание текста',                type: 'align',    default: 'left' },
     ]
   }
 };
@@ -258,7 +279,6 @@ function addBlock(type) {
   const id = ++idCounter;
   blocks.push({ id, type, data: {} });
   renderBlocks();
-  // auto-open the new block
   setTimeout(() => toggleBlock(id), 50);
   generate();
 }
@@ -297,7 +317,17 @@ function renderBlocks() {
   container.innerHTML = blocks.map((b, idx) => {
     const def = BLOCK_DEFS[b.type];
     const fieldsHtml = def.fields.map(f => {
-      const val = b.data[f.key] || '';
+      const val = b.data[f.key] !== undefined ? b.data[f.key] : (f.default || '');
+
+      if (f.type === 'align') {
+        const cur = val || f.default || 'left';
+        return `<label>${f.label}</label>
+<div class="align-toggle" id="align_${b.id}_${f.key}">
+  <button class="align-btn${cur === 'left' ? ' active' : ''}" data-val="left" onclick="setAlign(${b.id},'${f.key}','left')">← Лево</button>
+  <button class="align-btn${cur === 'center' ? ' active' : ''}" data-val="center" onclick="setAlign(${b.id},'${f.key}','center')">Центр →</button>
+</div>`;
+      }
+
       if (f.type === 'textarea') {
         return `<label>${f.label}</label>
 <div class="richtext-wrap">
@@ -309,6 +339,7 @@ function renderBlocks() {
   <div class="richtext" id="f_${b.id}_${f.key}" contenteditable="true" data-placeholder="${f.placeholder}" oninput="updateDataRich(${b.id},'${f.key}',this)">${val}</div>
 </div>`;
       }
+
       return `<label>${f.label}</label><input type="text" id="f_${b.id}_${f.key}" placeholder="${f.placeholder}" value="${val}" oninput="updateData(${b.id},'${f.key}',this.value)">`;
     }).join('');
 
@@ -336,6 +367,16 @@ function updateData(id, key, value) {
 function updateDataRich(id, key, el) {
   const block = blocks.find(b => b.id === id);
   if (block) block.data[key] = el.innerHTML;
+  generate();
+}
+
+function setAlign(id, key, value) {
+  const block = blocks.find(b => b.id === id);
+  if (block) block.data[key] = value;
+  const wrap = document.getElementById(`align_${id}_${key}`);
+  if (wrap) wrap.querySelectorAll('.align-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.val === value);
+  });
   generate();
 }
 
@@ -451,52 +492,60 @@ function splitLines(html) {
   return html.split(/<br\s*\/?>/i).map(s=>s.trim()).filter(Boolean);
 }
 
+function getAlign(d, def) {
+  return d.align || def;
+}
+
 function buildBlock(b) {
   const d = b.data;
   switch (b.type) {
 
     case 'banner': {
+      const align = getAlign(d, 'center');
       const text  = toHtml(d.text||'');
       const btn   = (d.btn||'КНОПКА').trim();
       const promo = (d.promo||'').trim();
       const promoHtml = promo
-        ? `<p style="margin:12px 0 0 0;font-family:${F};font-size:20px;line-height:1.5;color:#E5F228;text-align:center;"><em><span style="font-weight:400;">Вводи промокод <strong>${promo}</strong></span></em></p>`
+        ? `<p style="margin:12px 0 0 0;font-family:${F};font-size:20px;line-height:1.5;color:#E5F228;text-align:${align};"><em><span style="font-weight:400;">Вводи промокод <strong>${promo}</strong></span></em></p>`
         : '';
       const btnBanner = `display:inline-block;background-color:#E5F228;color:#000000;text-decoration:none;padding:15px 40px;border-radius:25px;font-size:20px;font-weight:bold;text-align:center;box-sizing:border-box;width:100%;max-width:400px;font-family:'Manrope',sans-serif;`;
       return tbl(
         'background-color:#0057FF;border-radius:10px;box-sizing:border-box;',
-        'padding:30px;text-align:center;border-radius:10px;color:#FFFFFF;',
-        `<p style="margin:0 0 16px 0;font-family:${F};font-size:20px;line-height:1.5;color:#E5F228;text-align:center;"><em><span style="font-weight:400;">${text}</span></em></p><a href="${d.url||'#'}" style="${btnBanner}">${btn}</a>${promoHtml}`
+        `padding:30px;text-align:${align};border-radius:10px;color:#FFFFFF;`,
+        `<p style="margin:0 0 16px 0;font-family:${F};font-size:20px;line-height:1.5;color:#E5F228;text-align:${align};"><em><span style="font-weight:400;">${text}</span></em></p><a href="${d.url||'#'}" style="${btnBanner}">${btn}</a>${promoHtml}`
       );
     }
 
     case 'text': {
+      const align = getAlign(d, 'left');
       const html = toHtml(d.content||'');
       if (!html) return '';
       const paras = splitParas(html);
       const content = paras.length > 1
-        ? paras.map(p => `<p style="margin:0 0 14px 0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;">${p}</p>`).join('')
-        : `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;">${html}</p>`;
-      return tbl('border-radius:10px;', 'padding:15px 20px;border-radius:10px;', content);
+        ? paras.map(p => `<p style="margin:0 0 14px 0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};">${p}</p>`).join('')
+        : `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};">${html}</p>`;
+      return tbl('border-radius:10px;', `padding:15px 20px;border-radius:10px;text-align:${align};`, content);
     }
 
     case 'highlight': {
+      const align = getAlign(d, 'left');
       const content = toHtml(d.content||'');
       return tbl(
         'background-color:#0057FF;border-radius:10px;box-sizing:border-box;',
         'padding:30px;border-radius:10px;',
-        `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#E5F228;text-align:left;">${content}</p>`
+        `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#E5F228;text-align:${align};">${content}</p>`
       );
     }
 
     case 'imgtext': {
+      const align    = getAlign(d, 'center');
       const title    = (d.title||'').trim();
       const content  = toHtml(d.content||'');
       const linktext = (d.linktext||'').trim();
       const imgurl   = (d.imgurl||'').trim();
-      const titleHtml   = title    ? `<h2 style="text-align:center;margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.3;"><strong>${title}</strong></h2>` : '';
-      const contentHtml = content  ? `<p style="text-align:center;margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.5;">${content}</p>` : '';
-      const linkHtml    = linktext ? `<p style="line-height:5px;">&nbsp;</p><p style="text-align:center;margin:0;"><strong><a href="${d.url||'#'}" style="color:#0057FF;text-decoration:underline;font-family:${F};font-size:20px;">${linktext}</a></strong></p><p style="line-height:5px;">&nbsp;</p>` : '';
+      const titleHtml   = title    ? `<h2 style="text-align:${align};margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.3;"><strong>${title}</strong></h2>` : '';
+      const contentHtml = content  ? `<p style="text-align:${align};margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.5;">${content}</p>` : '';
+      const linkHtml    = linktext ? `<p style="line-height:5px;">&nbsp;</p><p style="text-align:${align};margin:0;"><strong><a href="${d.url||'#'}" style="color:#0057FF;text-decoration:underline;font-family:${F};font-size:20px;">${linktext}</a></strong></p><p style="line-height:5px;">&nbsp;</p>` : '';
       const imgHtml     = imgurl   ? `<img src="${imgurl}" alt="Изображение" style="max-width:100%;height:auto;display:block;margin:0 auto;">` : `<div style="background:#ddd;height:100px;border-radius:8px;"></div>`;
       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom:20px;">
   <tr><td align="center">
@@ -520,14 +569,15 @@ function buildBlock(b) {
     }
 
     case 'list': {
+      const align = getAlign(d, 'left');
       const title = (d.title||'').trim();
       const items = splitLines(toHtml(d.items||''));
       if (!items.length) return '';
       const titleHtml = title
-        ? `<p style="margin:0 0 14px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;">${title}</p>`
+        ? `<p style="margin:0 0 14px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;text-align:${align};">${title}</p>`
         : '';
       const itemsHtml = items.map((item, i) =>
-        `<p style="margin:0${i<items.length-1?' 0 10px 0':''};font-family:${F};font-size:20px;line-height:1.5;color:#000000;">🔻 ${item}</p>`
+        `<p style="margin:0${i<items.length-1?' 0 10px 0':''};font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};">🔻 ${item}</p>`
       ).join('');
       return tbl(
         'background-color:#dbeeff;border-radius:10px;',
@@ -537,10 +587,11 @@ function buildBlock(b) {
     }
 
     case 'lightblock': {
+      const align   = getAlign(d, 'left');
       const title   = (d.title||'').trim();
       const content = toHtml(d.content||'');
-      const titleHtml   = title   ? `<p style="margin:0 0 16px 0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;"><strong>${title}</strong></p>` : '';
-      const contentHtml = content ? `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;">${content}</p>` : '';
+      const titleHtml   = title   ? `<p style="margin:0 0 16px 0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};"><strong>${title}</strong></p>` : '';
+      const contentHtml = content ? `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};">${content}</p>` : '';
       return tbl(
         'background-color:#f4f6fa;border-radius:10px;box-sizing:border-box;',
         'padding:30px;border-radius:10px;',
@@ -549,50 +600,54 @@ function buildBlock(b) {
     }
 
     case 'bordered': {
+      const align = getAlign(d, 'left');
       const html = toHtml(d.content||'');
       if (!html) return '';
       const paras = splitParas(html);
       const content = paras.length > 1
-        ? paras.map(p => `<p style="margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;">${p}</p>`).join('')
-        : `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;">${html}</p>`;
+        ? paras.map(p => `<p style="margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};">${p}</p>`).join('')
+        : `<p style="margin:0;font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};">${html}</p>`;
       return tbl(
         'border:2px solid #0057FF;border-radius:10px;background-color:#f4f6fa;',
-        `padding:15px 20px;font-family:${F};font-size:20px;line-height:1.5;font-weight:400;color:#000000;border-radius:10px;`,
+        `padding:15px 20px;font-family:${F};font-size:20px;line-height:1.5;font-weight:400;color:#000000;border-radius:10px;text-align:${align};`,
         content,
         'margin-bottom:20px;'
       );
     }
 
     case 'bordered-cta': {
+      const align   = getAlign(d, 'center');
       const title   = (d.title||'').trim();
       const content = toHtml(d.content||'');
       const btn     = (d.btn||'ССЫЛКА').trim();
-      const titleHtml   = title   ? `<p style="margin:0 0 6px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;">${title}</p>` : '';
-      const contentHtml = content ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:18px;line-height:1.5;color:#333333;">${content}</p>` : (titleHtml ? '<p style="margin:0 0 18px 0;"></p>' : '');
+      const titleHtml   = title   ? `<p style="margin:0 0 6px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;text-align:${align};">${title}</p>` : '';
+      const contentHtml = content ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:18px;line-height:1.5;color:#333333;text-align:${align};">${content}</p>` : (titleHtml ? '<p style="margin:0 0 18px 0;"></p>' : '');
       return tbl(
         'border:2px solid #0057FF;border-radius:10px;background-color:#f4f6fa;',
-        'padding:24px 20px;text-align:center;border-radius:10px;',
+        `padding:24px 20px;text-align:${align};border-radius:10px;`,
         `${titleHtml}${contentHtml}<a href="${d.url||'#'}" style="${BTN}">${btn}</a>`,
         'margin-bottom:20px;'
       );
     }
 
     case 'cta': {
+      const align   = getAlign(d, 'center');
       const title   = (d.title||'').trim();
       const content = toHtml(d.content||'');
       const btn     = (d.btn||'КНОПКА').trim();
-      const titleHtml   = title   ? `<p style="margin:0 0 12px 0;font-family:${F};font-size:20px;font-weight:700;color:#ffffff;">${title}</p>` : '';
-      const contentHtml = content ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:20px;line-height:1.5;color:#ffffff;">${content}</p>` : '';
+      const titleHtml   = title   ? `<p style="margin:0 0 12px 0;font-family:${F};font-size:20px;font-weight:700;color:#ffffff;text-align:${align};">${title}</p>` : '';
+      const contentHtml = content ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:20px;line-height:1.5;color:#ffffff;text-align:${align};">${content}</p>` : '';
       const btnCta = `display:inline-block;background-color:#E5F228;color:#000000;text-decoration:none;padding:15px 40px;border-radius:25px;font-size:20px;font-weight:bold;text-align:center;box-sizing:border-box;width:100%;max-width:400px;font-family:'Manrope',sans-serif;`;
       return tbl(
         'background-color:#0057FF;border-radius:10px;box-sizing:border-box;',
-        'padding:30px;text-align:center;border-radius:10px;',
+        `padding:30px;text-align:${align};border-radius:10px;`,
         `${titleHtml}${contentHtml}<a href="${d.url||'#'}" style="${btnCta}">${btn}</a>`,
         'margin-bottom:20px;'
       );
     }
 
     case 'imgbtn': {
+      const align   = getAlign(d, 'center');
       const imgurl  = (d.imgurl||'').trim();
       const content = toHtml(d.content||'');
       const btn     = (d.btn||'ССЫЛКА').trim();
@@ -607,8 +662,8 @@ function buildBlock(b) {
         <td style="width:40%;padding:10px 0;text-align:center;vertical-align:middle;">
           ${imgHtml}
         </td>
-        <td style="width:50%;padding:20px 10px 20px 10px;text-align:center;vertical-align:middle;font-family:'Manrope',sans-serif;font-size:18px;color:#E5F228;">
-          <p style="margin:0 0 16px 0;font-family:'Manrope',sans-serif;font-size:18px;line-height:1.5;color:#E5F228;">${content}</p>
+        <td style="width:50%;padding:20px 10px 20px 10px;text-align:${align};vertical-align:middle;font-family:'Manrope',sans-serif;font-size:18px;color:#E5F228;">
+          <p style="margin:0 0 16px 0;font-family:'Manrope',sans-serif;font-size:18px;line-height:1.5;color:#E5F228;text-align:${align};">${content}</p>
           <a href="${d.url||'#'}" style="${btnStyle}">${btn}</a>
         </td>
       </tr></tbody>
@@ -618,12 +673,13 @@ function buildBlock(b) {
     }
 
     case 'twocols': {
+      const align = getAlign(d, 'left');
       const title = (d.title||'').trim();
       const col1  = toHtml(d.col1||'');
       const col2  = toHtml(d.col2||'');
       const titleRow = title
         ? `<tr>
-          <td colspan="3" style="background-color:#f4f6fa;padding:20px;border-radius:10px;box-sizing:border-box;text-align:center;font-size:18px;font-weight:bold;font-family:${F};color:#333333;">${title}</td>
+          <td colspan="3" style="background-color:#f4f6fa;padding:20px;border-radius:10px;box-sizing:border-box;text-align:${align};font-size:18px;font-weight:bold;font-family:${F};color:#333333;">${title}</td>
         </tr>
         <tr><td colspan="3" style="height:20px;"></td></tr>`
         : '';
@@ -634,11 +690,11 @@ function buildBlock(b) {
         ${titleRow}
         <tr>
           <td class="twocols-box" style="width:49%;background-color:#f4f6fa;padding:20px;border-radius:10px;box-sizing:border-box;vertical-align:top;">
-            <p style="font-size:16px;color:#333333;margin:0;font-family:${F};line-height:1.5;">${col1}</p>
+            <p style="font-size:16px;color:#333333;margin:0;font-family:${F};line-height:1.5;text-align:${align};">${col1}</p>
           </td>
           <td class="twocols-spacer" style="width:2%;"></td>
           <td class="twocols-box" style="width:49%;background-color:#f4f6fa;padding:20px;border-radius:10px;box-sizing:border-box;vertical-align:top;">
-            <p style="font-size:16px;color:#333333;margin:0;font-family:${F};line-height:1.5;">${col2}</p>
+            <p style="font-size:16px;color:#333333;margin:0;font-family:${F};line-height:1.5;text-align:${align};">${col2}</p>
           </td>
         </tr>
         <tr><td colspan="3" style="height:1px;"></td></tr>

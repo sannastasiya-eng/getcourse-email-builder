@@ -613,7 +613,7 @@ function buildBlock(b) {
       return tbl(
         'background-color:#0057FF;border-radius:10px;box-sizing:border-box;',
         `padding:30px;text-align:${align};border-radius:10px;`,
-        `${titleHtml}${contentHtml}<a href="${d.url||'#'}" style="${btnCta}">${btn}</a>`,
+        `${titleHtml}${contentHtml}<p style="margin:0;text-align:center;"><a href="${d.url||'#'}" style="${btnCta}">${btn}</a></p>`,
         'margin-bottom:20px;'
       );
     }

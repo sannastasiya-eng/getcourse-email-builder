@@ -131,8 +131,7 @@ input:focus { border-color: #0071e3; }
     <button class="btn-add" onclick="addBlock('highlight')">💙 Синий блок</button>
     <button class="btn-add" onclick="addBlock('imgtext')">🖼 Текст + картинка</button>
     <button class="btn-add" onclick="addBlock('imgbtn')">🔵 Картинка + кнопка</button>
-    <button class="btn-add" onclick="addBlock('list')">🔻 Список</button>
-    <button class="btn-add" onclick="addBlock('lightblock')">🔘 Серый блок</button>
+<button class="btn-add" onclick="addBlock('lightblock')">🔘 Серый блок</button>
     <button class="btn-add" onclick="addBlock('bordered')">⬜ Рамка — текст</button>
     <button class="btn-add" onclick="addBlock('bordered-cta')">🔲 Рамка — кнопка</button>
     <button class="btn-add" onclick="addBlock('cta')">🚀 Нижний CTA</button>
@@ -219,14 +218,6 @@ const BLOCK_DEFS = {
       { key: 'url',      label: 'Ссылка (куда ведёт)',                   type: 'text',     placeholder: 'https://...' },
       { key: 'imgurl',   label: 'URL картинки (из Геткурса)',            type: 'text',     placeholder: 'https://fs.getcourse.ru/...' },
       { key: 'align',    label: 'Выравнивание текста',                   type: 'align',    default: 'center' },
-    ]
-  },
-  list: {
-    icon: '🔻', title: 'Список с треугольниками',
-    fields: [
-      { key: 'title', label: 'Заголовок списка (оставь пустым если нет)', type: 'text',     placeholder: 'Что умеет?' },
-      { key: 'items', label: 'Пункты списка (каждый с новой строки)',      type: 'textarea', rows: 5, placeholder: 'Собирает сайты, боты, веб-приложения с нуля;\nАвтоматизирует работу с файлами;\nСоздаёт мультиагентные системы;' },
-      { key: 'align', label: 'Выравнивание текста',                        type: 'align',    default: 'left' },
     ]
   },
   lightblock: {
@@ -567,24 +558,6 @@ function buildBlock(b) {
     </table>
   </td></tr>
 </table>`;
-    }
-
-    case 'list': {
-      const align = getAlign(d, 'left');
-      const title = (d.title||'').trim();
-      const items = splitLines(toHtml(d.items||''));
-      if (!items.length) return '';
-      const titleHtml = title
-        ? `<p style="margin:0 0 14px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;text-align:${align};">${title}</p>`
-        : '';
-      const itemsHtml = items.map((item, i) =>
-        `<p style="margin:0${i<items.length-1?' 0 10px 0':''};font-family:${F};font-size:20px;line-height:1.5;color:#000000;text-align:${align};">🔻 ${item}</p>`
-      ).join('');
-      return tbl(
-        'background-color:#dbeeff;border-radius:10px;',
-        'padding:20px 22px;border-radius:10px;',
-        titleHtml + itemsHtml
-      );
     }
 
     case 'lightblock': {

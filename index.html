@@ -621,7 +621,7 @@ function buildBlock(b) {
       const content = toHtml(d.content||'');
       const btn     = (d.btn||'ССЫЛКА').trim();
       const titleHtml   = title   ? `<p style="margin:0 0 6px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;text-align:${align};">${title}</p>` : '';
-      const contentHtml = content ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:18px;line-height:1.5;color:#333333;text-align:${align};">${content}</p>` : (titleHtml ? '<p style="margin:0 0 18px 0;"></p>' : '');
+      const contentHtml = content ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:20px;line-height:1.5;color:#333333;text-align:${align};">${content}</p>` : (titleHtml ? '<p style="margin:0 0 18px 0;"></p>' : '');
       return tbl(
         'border:2px solid #0057FF;border-radius:10px;background-color:#f4f6fa;',
         `padding:24px 20px;text-align:${align};border-radius:10px;`,

@@ -115,6 +115,30 @@ input:focus { border-color: #0071e3; }
   .right { position: relative; height: auto; }
   .code-area { min-height: 300px; }
 }
+
+/* Import modal */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45);
+  z-index: 1000; align-items: center; justify-content: center;
+}
+.modal-overlay.open { display: flex; }
+.modal-box {
+  background: #fff; border-radius: 14px; padding: 28px 24px 20px;
+  width: 90%; max-width: 680px; box-shadow: 0 8px 40px rgba(0,0,0,0.2);
+  display: flex; flex-direction: column; gap: 14px;
+}
+.modal-box h3 { font-size: 16px; font-weight: 700; margin: 0; }
+.modal-box p.modal-hint { font-size: 12px; color: #888; margin: -8px 0 0; }
+.modal-textarea {
+  width: 100%; height: 260px; padding: 10px 12px;
+  border: 1.5px solid #ddd; border-radius: 8px; resize: vertical;
+  font-family: 'Courier New', Consolas, monospace; font-size: 12px;
+  line-height: 1.5; outline: none; transition: border-color 0.15s;
+}
+.modal-textarea:focus { border-color: #0071e3; }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+.btn-import { background: #0071e3; color: #fff; }
+.btn-import:hover { background: #0060c0; }
 </style>
 </head>
 <body>
@@ -144,6 +168,7 @@ input:focus { border-color: #0071e3; }
 
   <div class="actions">
     <button class="btn btn-clear" onclick="clearAll()">Очистить</button>
+    <button class="btn btn-clear" onclick="openImport()" style="background:#e8f0fe;color:#0057FF;border:1.5px solid #c0d4fb;">📥 Импорт HTML</button>
     <button class="btn btn-gen" onclick="generate()">Сгенерировать HTML →</button>
   </div>
 </div>
@@ -166,6 +191,19 @@ input:focus { border-color: #0071e3; }
   </div>
 </div>
 
+</div>
+
+<!-- Import modal -->
+<div class="modal-overlay" id="importModal" onclick="if(event.target===this)closeImport()">
+  <div class="modal-box">
+    <h3>Импорт HTML</h3>
+    <p class="modal-hint">Вставьте HTML, сгенерированный этим конструктором. Текущие блоки будут заменены.</p>
+    <textarea class="modal-textarea" id="importTextarea" placeholder="Вставьте HTML сюда..."></textarea>
+    <div class="modal-actions">
+      <button class="btn btn-clear" onclick="closeImport()">Отмена</button>
+      <button class="btn btn-import" onclick="doImport()">Загрузить блоки</button>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -719,6 +757,190 @@ function clearAll() {
   generatedHtml = '';
   renderBlocks();
   showCode('');
+}
+
+// ===================== IMPORT =====================
+
+function openImport() {
+  document.getElementById('importModal').classList.add('open');
+  setTimeout(() => document.getElementById('importTextarea').focus(), 50);
+}
+
+function closeImport() {
+  document.getElementById('importModal').classList.remove('open');
+}
+
+function doImport() {
+  const raw = document.getElementById('importTextarea').value.trim();
+  if (!raw) return;
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(raw, 'text/html');
+  const tables = Array.from(doc.body.children).filter(el => el.tagName === 'TABLE');
+  const newBlocks = [];
+  for (const t of tables) {
+    const b = parseBlock(t);
+    if (b) newBlocks.push(b);
+  }
+  if (!newBlocks.length) {
+    alert('Блоки не найдены. Вставьте HTML, сгенерированный этим конструктором.');
+    return;
+  }
+  if (blocks.length && !confirm(`Загрузить ${newBlocks.length} блок(а)? Текущие блоки будут заменены.`)) return;
+  blocks = newBlocks.map(b => ({ id: ++idCounter, type: b.type, data: b.data }));
+  renderBlocks();
+  generate();
+  closeImport();
+  document.getElementById('importTextarea').value = '';
+}
+
+function parseBlock(t) {
+  const firstTd = t.querySelector('td');
+  if (!firstTd) return null;
+  const fs = firstTd.getAttribute('style') || '';
+  if (/height:20px/.test(fs) && /line-height:20px/.test(fs)) return null;
+
+  const h = t.outerHTML;
+  if (h.includes('class="twocols-box"'))                       return { type: 'twocols',      data: parseTwocols(t) };
+  if (h.includes('class="container10"') || h.includes('64.66%')) return { type: 'imgtext',    data: parseImgtext(t) };
+  if (h.includes('border-radius:100px') && h.includes('0057FF')) return { type: 'imgbtn',     data: parseImgbtn(t) };
+  if (h.includes('border:2px solid #0057FF')) {
+    return t.querySelector('a')
+      ? { type: 'bordered-cta', data: parseBorderedCta(t) }
+      : { type: 'bordered',     data: parseBordered(t) };
+  }
+  if (h.includes('background-color:#0057FF')) {
+    if (!t.querySelector('a')) return { type: 'highlight', data: parseHighlight(t) };
+    if (h.includes('<em>'))    return { type: 'banner',    data: parseBanner(t) };
+    return                            { type: 'cta',       data: parseCta(t) };
+  }
+  if (h.includes('background-color:#f4f6fa')) return { type: 'lightblock', data: parseLightblock(t) };
+  return { type: 'text', data: parseText(t) };
+}
+
+function alignFrom(styleStr) {
+  const m = (styleStr || '').match(/text-align:(left|center)/);
+  return m ? m[1] : 'left';
+}
+
+function parseText(t) {
+  const paras = Array.from(t.querySelectorAll('p'));
+  const content = paras.map(p => p.innerHTML).join('\n\n');
+  const align = paras[0] ? alignFrom(paras[0].getAttribute('style')) : 'left';
+  return { content, align };
+}
+
+function parseHighlight(t) {
+  const p = t.querySelector('p');
+  return { content: p ? p.innerHTML : '', align: p ? alignFrom(p.getAttribute('style')) : 'left' };
+}
+
+function parseBanner(t) {
+  const td = t.querySelector('td[style*="color:#FFFFFF"]') || t.querySelector('td[style*="border-radius:10px"]');
+  const align = td ? alignFrom(td.getAttribute('style')) : 'center';
+  const paras = Array.from(t.querySelectorAll('p'));
+  let text = '';
+  if (paras[0]) {
+    const em = paras[0].querySelector('em');
+    let inner = em ? em.innerHTML : paras[0].innerHTML;
+    const m = inner.match(/^<span[^>]*>([\s\S]*)<\/span>$/i);
+    text = m ? m[1] : inner;
+  }
+  const a = t.querySelector('a');
+  const btn = a ? a.textContent.trim() : '';
+  const url = a ? (a.getAttribute('href') || '') : '';
+  let promo = '';
+  if (paras.length > 1) {
+    const strong = paras[paras.length - 1].querySelector('strong');
+    if (strong) promo = strong.textContent.trim();
+  }
+  return { text, btn, url, promo, align };
+}
+
+function parseCta(t) {
+  const td = t.querySelector('td[style*="padding:30px"]');
+  const align = td ? alignFrom(td.getAttribute('style')) : 'center';
+  const paras = Array.from(t.querySelectorAll('p')).filter(p => !p.querySelector('a') || p.querySelector('a') === null);
+  let title = '', content = '';
+  for (const p of paras) {
+    if (p.querySelector('a')) continue;
+    const st = p.getAttribute('style') || '';
+    if (st.includes('font-weight:700') && !title) title = p.textContent.trim();
+    else if (p.innerHTML.trim()) content = p.innerHTML;
+  }
+  const a = t.querySelector('a');
+  return { title, content, btn: a ? a.textContent.trim() : '', url: a ? (a.getAttribute('href') || '') : '', align };
+}
+
+function parseBordered(t) {
+  const paras = Array.from(t.querySelectorAll('p'));
+  return { content: paras.map(p => p.innerHTML).join('\n\n'), align: paras[0] ? alignFrom(paras[0].getAttribute('style')) : 'left' };
+}
+
+function parseBorderedCta(t) {
+  const td = t.querySelector('td[style*="padding:24px"]') || t.querySelector('td[style*="padding"]');
+  const align = td ? alignFrom(td.getAttribute('style')) : 'center';
+  const paras = Array.from(t.querySelectorAll('p'));
+  let title = '', content = '';
+  for (const p of paras) {
+    if (p.querySelector('a')) continue;
+    const st = p.getAttribute('style') || '';
+    if (st.includes('font-weight:700') && !title) title = p.textContent.trim();
+    else { const txt = p.innerHTML.trim(); if (txt && txt !== '&nbsp;') content = txt; }
+  }
+  const a = t.querySelector('a');
+  return { title, content, btn: a ? a.textContent.trim() : '', url: a ? (a.getAttribute('href') || '') : '', align };
+}
+
+function parseLightblock(t) {
+  const paras = Array.from(t.querySelectorAll('p'));
+  let title = '', content = '', align = 'left';
+  for (const p of paras) {
+    align = alignFrom(p.getAttribute('style')) || align;
+    const strong = p.querySelector('strong');
+    if (strong && p.children.length === 1 && !title) title = strong.textContent.trim();
+    else content = p.innerHTML;
+  }
+  return { title, content, align };
+}
+
+function parseImgtext(t) {
+  const leftTd  = t.querySelector('.container10-text-box') || t.querySelector('td[style*="64.66%"]');
+  const rightTd = t.querySelector('.container10-img-box')  || t.querySelector('td[style*="33.33%"]');
+  let title = '', content = '', linktext = '', url = '', imgurl = '', align = 'center';
+  if (leftTd) {
+    const h2 = leftTd.querySelector('h2');
+    title = h2 ? (h2.querySelector('strong')?.textContent || h2.textContent).trim() : '';
+    const a = leftTd.querySelector('a');
+    if (a) { linktext = a.textContent.trim(); url = a.getAttribute('href') || ''; }
+    const paras = Array.from(leftTd.querySelectorAll('p')).filter(p => !p.querySelector('a'));
+    content = paras.map(p => p.innerHTML).join('\n\n');
+    if (paras[0]) align = alignFrom(paras[0].getAttribute('style')) || 'center';
+  }
+  if (rightTd) { const img = rightTd.querySelector('img'); imgurl = img ? (img.getAttribute('src') || '') : ''; }
+  return { title, content, linktext, url, imgurl, align };
+}
+
+function parseImgbtn(t) {
+  const img = t.querySelector('img');
+  const p = t.querySelector('p');
+  const a = t.querySelector('a');
+  return {
+    imgurl:  img ? (img.getAttribute('src') || '') : '',
+    content: p   ? p.innerHTML : '',
+    btn:     a   ? a.textContent.trim() : '',
+    url:     a   ? (a.getAttribute('href') || '') : '',
+    align:   p   ? alignFrom(p.getAttribute('style')) : 'center'
+  };
+}
+
+function parseTwocols(t) {
+  const boxes = Array.from(t.querySelectorAll('.twocols-box'));
+  const col1 = boxes[0] ? (boxes[0].querySelector('p')?.innerHTML || '') : '';
+  const col2 = boxes[1] ? (boxes[1].querySelector('p')?.innerHTML || '') : '';
+  const titleTd = t.querySelector('td[colspan="3"][style*="font-weight:bold"]');
+  const title = titleTd ? titleTd.textContent.trim() : '';
+  const align = boxes[0] ? alignFrom(boxes[0].querySelector('p')?.getAttribute('style')) : 'left';
+  return { title, col1, col2, align };
 }
 </script>
 </body>

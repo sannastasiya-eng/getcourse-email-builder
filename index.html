@@ -62,6 +62,7 @@ input:focus { border-color: #0071e3; }
 }
 .richtext:focus { border-color: #0071e3; }
 .richtext:empty::before { content: attr(data-placeholder); color: #aaa; pointer-events: none; display: block; }
+.richtext a { color: #0057FF; text-decoration: underline; cursor: pointer; }
 
 /* Align toggle */
 .align-toggle { display: flex; gap: 4px; margin-top: 2px; }
@@ -363,6 +364,8 @@ function renderBlocks() {
   <div class="richtext-toolbar">
     <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('bold')" title="Жирный"><b>Ж</b></button>
     <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('italic')" title="Курсив"><i>К</i></button>
+    <button class="toolbar-btn" onmousedown="event.preventDefault();fmtLink()" title="Вставить ссылку">🔗 Ссылка</button>
+    <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('unlink')" title="Убрать ссылку" style="font-size:11px;">✕ ссылка</button>
     <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('removeFormat')" title="Убрать форматирование" style="font-size:11px;">✕ формат</button>
   </div>
   <div class="richtext" id="f_${b.id}_${f.key}" contenteditable="true" data-placeholder="${f.placeholder}" oninput="updateDataRich(${b.id},'${f.key}',this)">${val}</div>
@@ -453,6 +456,38 @@ document.addEventListener('paste', function(e) {
 
 function fmt(cmd) {
   document.execCommand(cmd, false, null);
+}
+
+function fmtLink() {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || sel.isCollapsed) {
+    alert('Выдели текст, который хочешь сделать ссылкой');
+    return;
+  }
+  const range = sel.getRangeAt(0).cloneRange();
+  const node = range.commonAncestorContainer;
+  const richEl = (node.nodeType === 1 ? node : node.parentElement)?.closest('.richtext');
+
+  const url = prompt('Введи ссылку:', 'https://');
+  if (!url || url.trim() === '' || url.trim() === 'https://') return;
+
+  sel.removeAllRanges();
+  sel.addRange(range);
+  document.execCommand('createLink', false, url.trim());
+
+  if (richEl) {
+    richEl.querySelectorAll('a[href]').forEach(a => {
+      if (!a.getAttribute('target')) a.setAttribute('target', '_blank');
+      if (!a.getAttribute('rel'))    a.setAttribute('rel', 'noopener');
+      if (!a.style.color) {
+        a.style.color = '#0057FF';
+        a.style.textDecoration = 'underline';
+      }
+    });
+    const id  = +richEl.id.split('_')[1];
+    const key = richEl.id.split('_').slice(2).join('_');
+    updateDataRich(id, key, richEl);
+  }
 }
 
 // Enter key → <br> instead of new <div>

@@ -366,6 +366,7 @@ function renderBlocks() {
     <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('italic')" title="Курсив"><i>К</i></button>
     <button class="toolbar-btn" onmousedown="event.preventDefault();fmtLink()" title="Вставить ссылку">🔗 Ссылка</button>
     <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('unlink')" title="Убрать ссылку" style="font-size:11px;">✕ ссылка</button>
+    <button class="toolbar-btn" onmousedown="event.preventDefault();fmtTypo(this)" title="Типограф: «кавычки», тире, многоточие" style="font-size:12px;">«»</button>
     <button class="toolbar-btn" onmousedown="event.preventDefault();fmt('removeFormat')" title="Убрать форматирование" style="font-size:11px;">✕ формат</button>
   </div>
   <div class="richtext" id="f_${b.id}_${f.key}" contenteditable="true" data-placeholder="${f.placeholder}" oninput="updateDataRich(${b.id},'${f.key}',this)">${val}</div>
@@ -456,6 +457,35 @@ document.addEventListener('paste', function(e) {
 
 function fmt(cmd) {
   document.execCommand(cmd, false, null);
+}
+
+function fmtTypo(btn) {
+  const richEl = btn.closest('.richtext-wrap')?.querySelector('.richtext');
+  if (!richEl) return;
+  applyTypo(richEl);
+}
+
+function applyTypo(richEl) {
+  function processNode(node) {
+    if (node.nodeType === 3) {
+      let t = node.nodeValue;
+      // "кавычки" → «кавычки»
+      t = t.replace(/"([^"]*)"/g, '«$1»');
+      // пробел - пробел → em-тире
+      t = t.replace(/ - /g, ' — ');
+      // дефис в начале строки → em-тире
+      t = t.replace(/(^|\n)- /g, '$1— ');
+      // три точки → многоточие
+      t = t.replace(/\.{3}/g, '…');
+      node.nodeValue = t;
+    } else {
+      Array.from(node.childNodes).forEach(processNode);
+    }
+  }
+  processNode(richEl);
+  const id  = +richEl.id.split('_')[1];
+  const key = richEl.id.split('_').slice(2).join('_');
+  updateDataRich(id, key, richEl);
 }
 
 function fmtLink() {

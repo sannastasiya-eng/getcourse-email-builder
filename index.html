@@ -155,6 +155,7 @@ input:focus { border-color: #0071e3; }
     <button class="btn-add" onclick="addBlock('text')">📝 Текст</button>
     <button class="btn-add" onclick="addBlock('highlight')">💙 Синий блок</button>
     <button class="btn-add" onclick="addBlock('imgtext')">🖼 Текст + картинка</button>
+    <button class="btn-add" onclick="addBlock('imgtextbtn')">🖼 Текст + картинка + кнопка</button>
     <button class="btn-add" onclick="addBlock('imgbtn')">🔵 Картинка + кнопка</button>
 <button class="btn-add" onclick="addBlock('lightblock')">🔘 Серый блок</button>
     <button class="btn-add" onclick="addBlock('bordered')">⬜ Рамка — текст</button>
@@ -247,6 +248,18 @@ const BLOCK_DEFS = {
       { key: 'btn',     label: 'Текст кнопки',                 type: 'text',     placeholder: 'ССЫЛКА' },
       { key: 'url',     label: 'Ссылка кнопки',                type: 'text',     placeholder: 'https://...' },
       { key: 'align',   label: 'Выравнивание текста',          type: 'align',    default: 'center' },
+    ]
+  },
+  imgtextbtn: {
+    icon: '🖼', title: 'Текст + картинка + кнопка',
+    fields: [
+      { key: 'title',   label: 'Заголовок (оставь пустым если нет)',        type: 'text',     placeholder: '⏰ Специальное предложение!' },
+      { key: 'content', label: 'Текст блока',                               type: 'textarea', rows: 4, placeholder: 'Описание...' },
+      { key: 'btn',     label: 'Текст кнопки',                              type: 'text',     placeholder: 'ЗАБРАТЬ СКИДКУ' },
+      { key: 'url',     label: 'Ссылка кнопки',                             type: 'text',     placeholder: 'https://...' },
+      { key: 'note',    label: 'Текст под кнопкой (оставь пустым если нет)', type: 'textarea', rows: 2, placeholder: 'Предложение действует до 23:59' },
+      { key: 'imgurl',  label: 'URL картинки (из Геткурса)',                type: 'text',     placeholder: 'https://fs.getcourse.ru/...' },
+      { key: 'align',   label: 'Выравнивание текста',                       type: 'align',    default: 'center' },
     ]
   },
   imgtext: {
@@ -647,6 +660,40 @@ function buildBlock(b) {
       );
     }
 
+    case 'imgtextbtn': {
+      const align    = getAlign(d, 'center');
+      const title    = (d.title||'').trim();
+      const content  = toHtml(d.content||'');
+      const btn      = (d.btn||'КНОПКА').trim();
+      const note     = toHtml(d.note||'');
+      const imgurl   = (d.imgurl||'').trim();
+      const titleHtml   = title   ? `<h2 style="text-align:${align};margin:0 0 12px 0;font-family:${F};font-size:20px;line-height:1.3;"><strong>${title}</strong></h2>` : '';
+      const contentHtml = content ? `<p style="text-align:${align};margin:0 0 14px 0;font-family:${F};font-size:20px;line-height:1.5;">${content}</p>` : '';
+      const btnStyle    = `display:inline-block;background-color:#E5F228;color:#000000;font-weight:700;padding:12px 20px;border-radius:25px;text-decoration:none;font-size:16px;font-family:'Manrope',sans-serif;text-align:center;box-sizing:border-box;width:100%;`;
+      const btnHtml     = `<p style="margin:0 0 10px 0;text-align:center;"><a href="${d.url||'#'}" style="${btnStyle}">${btn}</a></p>`;
+      const noteHtml    = note ? `<p style="text-align:${align};margin:0;font-family:${F};font-size:14px;line-height:1.4;color:#666666;">${note}</p>` : '';
+      const imgHtml     = imgurl ? `<img src="${imgurl}" alt="Изображение" style="max-width:100%;height:auto;display:block;margin:0 auto;">` : `<div style="background:#ddd;height:100px;border-radius:8px;"></div>`;
+      return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+  <tr><td align="center">
+    <table role="presentation" class="container10b" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:600px;background-color:#ffffff;padding:6px;border-radius:10px;border-collapse:separate!important;">
+      <tbody>
+        <tr><td colspan="3" style="height:1px;"></td></tr>
+        <tr>
+          <td class="container10-text-box" style="width:64.66%;background-color:#f4f6fa;padding:12px;border-radius:10px;vertical-align:top;box-sizing:border-box;">
+            ${titleHtml}${contentHtml}${btnHtml}${noteHtml}
+          </td>
+          <td class="container10-spacer" style="width:2%;"></td>
+          <td class="container10-img-box" style="width:33.33%;background-color:#f4f6fa;padding:12px;border-radius:10px;text-align:center;vertical-align:middle;box-sizing:border-box;">
+            ${imgHtml}
+          </td>
+        </tr>
+        <tr><td colspan="3" style="height:1px;"></td></tr>
+      </tbody>
+    </table>
+  </td></tr>
+</table>`;
+    }
+
     case 'imgtext': {
       const align    = getAlign(d, 'center');
       const title    = (d.title||'').trim();
@@ -903,6 +950,7 @@ function parseBlock(t) {
 
   const h = t.outerHTML;
   if (h.includes('class="twocols-box"'))                       return { type: 'twocols',      data: parseTwocols(t) };
+  if (h.includes('class="container10b"'))                          return { type: 'imgtextbtn', data: parseImgtextbtn(t) };
   if (h.includes('class="container10"') || h.includes('64.66%')) return { type: 'imgtext',    data: parseImgtext(t) };
   if (h.includes('border-radius:100px') && h.includes('0057FF')) return { type: 'imgbtn',     data: parseImgbtn(t) };
   if (h.includes('border:2px solid #0057FF')) {
@@ -1035,6 +1083,26 @@ function parseLightblock(t) {
     else content = p.innerHTML;
   }
   return { title, content, align };
+}
+
+function parseImgtextbtn(t) {
+  const leftTd  = t.querySelector('.container10-text-box');
+  const rightTd = t.querySelector('.container10-img-box');
+  let title = '', content = '', btn = '', url = '', note = '', imgurl = '', align = 'center';
+  if (leftTd) {
+    const h2 = leftTd.querySelector('h2');
+    title = h2 ? (h2.querySelector('strong')?.textContent || h2.textContent).trim() : '';
+    const a = leftTd.querySelector('a');
+    if (a) { btn = a.textContent.trim(); url = a.getAttribute('href') || ''; }
+    const paras = Array.from(leftTd.querySelectorAll('p')).filter(p => !p.querySelector('a'));
+    const contentParas = paras.filter(p => !(p.getAttribute('style')||'').includes('font-size:14px'));
+    const noteParas    = paras.filter(p =>  (p.getAttribute('style')||'').includes('font-size:14px'));
+    content = contentParas.map(p => p.innerHTML).join('\n\n');
+    note    = noteParas.map(p => p.innerHTML).join('\n\n');
+    if (contentParas[0]) align = alignFrom(contentParas[0].getAttribute('style')) || 'center';
+  }
+  if (rightTd) { const img = rightTd.querySelector('img'); imgurl = img ? (img.getAttribute('src') || '') : ''; }
+  return { title, content, btn, url, note, imgurl, align };
 }
 
 function parseImgtext(t) {

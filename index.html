@@ -159,6 +159,7 @@ input:focus { border-color: #0071e3; }
 <button class="btn-add" onclick="addBlock('lightblock')">🔘 Серый блок</button>
     <button class="btn-add" onclick="addBlock('bordered')">⬜ Рамка — текст</button>
     <button class="btn-add" onclick="addBlock('bordered-cta')">🔲 Рамка — кнопка</button>
+    <button class="btn-add" onclick="addBlock('bordered-cta2')">⧉ Рамка — 2 кнопки</button>
     <button class="btn-add" onclick="addBlock('cta')">🚀 Нижний CTA</button>
     <button class="btn-add" onclick="addBlock('twocols')">⚏ Два столбца</button>
   </div>
@@ -282,6 +283,20 @@ const BLOCK_DEFS = {
       { key: 'btn',     label: 'Текст кнопки',                               type: 'text',     placeholder: 'ССЫЛКА' },
       { key: 'url',     label: 'Ссылка кнопки',                              type: 'text',     placeholder: 'https://...' },
       { key: 'align',   label: 'Выравнивание текста',                        type: 'align',    default: 'center' },
+    ]
+  },
+  'bordered-cta2': {
+    icon: '⧉', title: 'Рамка — 2 кнопки',
+    fields: [
+      { key: 'title1',   label: 'Заголовок 1 (жирный, оставь пустым если нет)',   type: 'text',     placeholder: 'Тариф Базовый' },
+      { key: 'content1', label: 'Текст 1 (оставь пустым если нет)',               type: 'textarea', rows: 2, placeholder: 'Описание первого варианта' },
+      { key: 'btn1',     label: 'Текст кнопки 1',                                  type: 'text',     placeholder: 'ВЫБРАТЬ' },
+      { key: 'url1',     label: 'Ссылка кнопки 1',                                 type: 'text',     placeholder: 'https://...' },
+      { key: 'title2',   label: 'Заголовок 2 (жирный, оставь пустым если нет)',   type: 'text',     placeholder: 'Тариф PRO' },
+      { key: 'content2', label: 'Текст 2 (оставь пустым если нет)',               type: 'textarea', rows: 2, placeholder: 'Описание второго варианта' },
+      { key: 'btn2',     label: 'Текст кнопки 2',                                  type: 'text',     placeholder: 'ВЫБРАТЬ' },
+      { key: 'url2',     label: 'Ссылка кнопки 2',                                 type: 'text',     placeholder: 'https://...' },
+      { key: 'align',    label: 'Выравнивание текста',                              type: 'align',    default: 'center' },
     ]
   },
   cta: {
@@ -705,6 +720,28 @@ function buildBlock(b) {
       );
     }
 
+    case 'bordered-cta2': {
+      const align    = getAlign(d, 'center');
+      const title1   = (d.title1||'').trim();
+      const content1 = toHtml(d.content1||'');
+      const btn1     = (d.btn1||'КНОПКА').trim();
+      const title2   = (d.title2||'').trim();
+      const content2 = toHtml(d.content2||'');
+      const btn2     = (d.btn2||'КНОПКА').trim();
+      const t1Html = title1   ? `<p style="margin:0 0 6px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;text-align:${align};">${title1}</p>` : '';
+      const c1Html = content1 ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:20px;line-height:1.5;color:#333333;text-align:${align};">${content1}</p>` : (t1Html ? '<p style="margin:0 0 18px 0;">&nbsp;</p>' : '');
+      const t2Html = title2   ? `<p style="margin:0 0 6px 0;font-family:${F};font-size:20px;font-weight:700;color:#000000;text-align:${align};">${title2}</p>` : '';
+      const c2Html = content2 ? `<p style="margin:0 0 18px 0;font-family:${F};font-size:20px;line-height:1.5;color:#333333;text-align:${align};">${content2}</p>` : (t2Html ? '<p style="margin:0 0 18px 0;">&nbsp;</p>' : '');
+      const part1 = `${t1Html}${c1Html}<p style="margin:0;text-align:center;"><a href="${d.url1||'#'}" style="${BTN}">${btn1}</a></p>`;
+      const part2 = `${t2Html}${c2Html}<p style="margin:0;text-align:center;"><a href="${d.url2||'#'}" style="${BTN}">${btn2}</a></p>`;
+      const divider = `<table role="presentation" class="bcta2-divider" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td style="height:0;font-size:0;line-height:0;"></td></tr></table>`;
+      return tbl(
+        'border:2px solid #0057FF;border-radius:10px;background-color:#f4f6fa;',
+        `padding:24px 20px;text-align:${align};border-radius:10px;`,
+        `${part1}${divider}${part2}`
+      );
+    }
+
     case 'cta': {
       const align   = getAlign(d, 'center');
       const title   = (d.title||'').trim();
@@ -869,6 +906,7 @@ function parseBlock(t) {
   if (h.includes('class="container10"') || h.includes('64.66%')) return { type: 'imgtext',    data: parseImgtext(t) };
   if (h.includes('border-radius:100px') && h.includes('0057FF')) return { type: 'imgbtn',     data: parseImgbtn(t) };
   if (h.includes('border:2px solid #0057FF')) {
+    if (h.includes('bcta2-divider')) return { type: 'bordered-cta2', data: parseBorderedCta2(t) };
     return t.querySelector('a')
       ? { type: 'bordered-cta', data: parseBorderedCta(t) }
       : { type: 'bordered',     data: parseBordered(t) };
@@ -954,6 +992,37 @@ function parseBorderedCta(t) {
   }
   const a = t.querySelector('a');
   return { title, content, btn: a ? a.textContent.trim() : '', url: a ? (a.getAttribute('href') || '') : '', align };
+}
+
+function parseBorderedCta2(t) {
+  const td = t.querySelector('td[style*="padding:24px"]') || t.querySelector('td[style*="padding"]');
+  const align = td ? alignFrom(td.getAttribute('style')) : 'center';
+  const anchors = Array.from(t.querySelectorAll('a'));
+  const btn1 = anchors[0] ? anchors[0].textContent.trim() : '';
+  const url1 = anchors[0] ? (anchors[0].getAttribute('href') || '') : '';
+  const btn2 = anchors[1] ? anchors[1].textContent.trim() : '';
+  const url2 = anchors[1] ? (anchors[1].getAttribute('href') || '') : '';
+  const allParas = Array.from(t.querySelectorAll('p')).filter(p => {
+    const txt = p.innerHTML.trim();
+    return txt && txt !== '&nbsp;' && !p.querySelector('a');
+  });
+  const anchor1p = anchors[0] ? anchors[0].closest('p') : null;
+  let group1 = [], group2 = [];
+  for (const p of allParas) {
+    const after = anchor1p ? (anchor1p.compareDocumentPosition(p) & 4) : false;
+    if (after) group2.push(p); else group1.push(p);
+  }
+  function extract(paras) {
+    let title = '', content = '';
+    for (const p of paras) {
+      const st = p.getAttribute('style') || '';
+      if (st.includes('font-weight:700') && !title) title = p.textContent.trim();
+      else { const h = p.innerHTML.trim(); if (h) content = h; }
+    }
+    return { title, content };
+  }
+  const g1 = extract(group1), g2 = extract(group2);
+  return { title1: g1.title, content1: g1.content, btn1, url1, title2: g2.title, content2: g2.content, btn2, url2, align };
 }
 
 function parseLightblock(t) {

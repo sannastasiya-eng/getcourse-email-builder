@@ -671,7 +671,7 @@ function buildBlock(b) {
       const contentHtml = content ? `<p style="text-align:${align};margin:0 0 14px 0;font-family:${F};font-size:20px;line-height:1.5;">${content}</p>` : '';
       const btnStyle    = `display:inline-block;background-color:#E5F228;color:#000000;font-weight:700;padding:12px 20px;border-radius:25px;text-decoration:none;font-size:16px;font-family:'Manrope',sans-serif;text-align:center;box-sizing:border-box;width:100%;`;
       const btnHtml     = `<p style="margin:0 0 10px 0;text-align:center;"><a href="${d.url||'#'}" style="${btnStyle}">${btn}</a></p>`;
-      const noteHtml    = note ? `<p style="text-align:${align};margin:0;font-family:${F};font-size:14px;line-height:1.4;color:#666666;">${note}</p>` : '';
+      const noteHtml    = note ? `<p style="text-align:${align};margin:10px 0 0 0;font-family:${F};font-size:20px;line-height:1.5;">${note}</p>` : '';
       const imgHtml     = imgurl ? `<img src="${imgurl}" alt="Изображение" style="max-width:100%;height:auto;display:block;margin:0 auto;">` : `<div style="background:#ddd;height:100px;border-radius:8px;"></div>`;
       return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
   <tr><td align="center">
@@ -1095,8 +1095,9 @@ function parseImgtextbtn(t) {
     const a = leftTd.querySelector('a');
     if (a) { btn = a.textContent.trim(); url = a.getAttribute('href') || ''; }
     const paras = Array.from(leftTd.querySelectorAll('p')).filter(p => !p.querySelector('a'));
-    const contentParas = paras.filter(p => !(p.getAttribute('style')||'').includes('font-size:14px'));
-    const noteParas    = paras.filter(p =>  (p.getAttribute('style')||'').includes('font-size:14px'));
+    const anchor1p = a ? a.closest('p') : null;
+    const contentParas = paras.filter(p => !anchor1p || !(anchor1p.compareDocumentPosition(p) & 4));
+    const noteParas    = paras.filter(p =>  anchor1p &&  (anchor1p.compareDocumentPosition(p) & 4));
     content = contentParas.map(p => p.innerHTML).join('\n\n');
     note    = noteParas.map(p => p.innerHTML).join('\n\n');
     if (contentParas[0]) align = alignFrom(contentParas[0].getAttribute('style')) || 'center';
